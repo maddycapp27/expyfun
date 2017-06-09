@@ -17,7 +17,7 @@ def read_tab_raw(fname):
     Returns
     -------
     data : dict
-        The data, wach value in the dict being a list of tuples (event, time)
+        The data, each value in the dict being a list of tuples (event, time)
         for each occurrence of that key.
     """
     with open(fname, 'r') as f:
@@ -32,6 +32,15 @@ def read_tab_raw(fname):
 
     header = list(set([l[1] for l in lines]))
     header.sort()
+    these_times = [float(line[0]) for line in lines]
+    these_keys = [line[1] for line in lines]
+    these_vals = [line[2] for line in lines]
+    data = dict()
+    for ki, key in enumerate(header):
+        idx = np.where(key == np.array(these_keys))[0]
+        data[key] = [(these_vals[ii], these_times[ii]) for ii in idx]
+    return data
+
 
 def read_tab(fname, group_start='trial_id', group_end='trial_ok'):
     """Read .tab file from expyfun output

@@ -6,6 +6,38 @@ import numpy as np
 import csv
 
 
+def read_tab_raw(fname):
+    """Read .tab file from expyfun output without segmenting into trials
+    
+    Parameters
+    ----------
+    fname : str
+        Input filename.
+        
+    Returns
+    -------
+    data : dict
+        The data with each line from the tab file being a tuple in a list.
+    """
+    with open(fname, 'r') as f:
+        csvr = csv.reader(f, delimiter='\t')
+        lines = [c for c in csvr]
+
+    # first two lines are headers
+    assert (len(lines[0]) == 1 and lines[0][0][0] == '#')
+    #metadata = ast.literal_eval(lines[0][0][2:])
+    assert lines[1] == ['timestamp', 'event', 'value']
+    lines = lines[2:]
+
+    times = [float(line[0]) for line in lines]
+    keys = [line[1] for line in lines]
+    vals = [line[2] for line in lines]
+    data = dict()
+    idx = np.arange(len(lines))
+    data = [(times[ii], keys[ii], vals[ii]) for ii in idx]
+    return data
+
+
 def read_tab(fname, group_start='trial_id', group_end='trial_ok'):
     """Read .tab file from expyfun output
 
@@ -27,15 +59,8 @@ def read_tab(fname, group_start='trial_id', group_end='trial_ok'):
         key.
     """
     # load everything into memory for ease of use
-    with open(fname, 'r') as f:
-        csvr = csv.reader(f, delimiter='\t')
-        lines = [c for c in csvr]
-
-    # first two lines are headers
-    assert (len(lines[0]) == 1 and lines[0][0][0] == '#')
-    #metadata = ast.literal_eval(lines[0][0][2:])
-    assert lines[1] == ['timestamp', 'event', 'value']
-    lines = lines[2:]
+    raw = read_tab_raw(fname)
+    lines = [r for r in raw]
 
     # determine the event fields
     header = list(set([l[1] for l in lines]))
@@ -73,3 +98,14 @@ def read_tab(fname, group_start='trial_id', group_end='trial_ok'):
             d[key] = [(these_vals[ii], these_times[ii]) for ii in idx]
         data.append(d)
     return data
+    
+    
+    def reconstruct_tracker(fname):
+        # read in raw data
+        raw = read_tab_raw(fname)
+
+        # find tracker_identify and make list of IDs
+        # find tracker_ID_init lines and get dict
+        # reconstruct tracker objects from tracker_ID_init dict
+        ########### return tracker objects ####################
+        # 

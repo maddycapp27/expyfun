@@ -4,6 +4,7 @@ from nose.tools import assert_equal, assert_in, assert_raises
 from expyfun import ExperimentController
 from expyfun.io import read_tab
 from expyfun._utils import _TempDir, _hide_window
+from expyfun.stimuli import TrackerUD
 
 warnings.simplefilter('always')
 

@@ -4,6 +4,8 @@
 
 import numpy as np
 import csv
+import ast
+from ..stimuli import TrackerUD, TrackerBinom, TrackerDealer
 
 
 def read_tab_raw(fname):
@@ -103,9 +105,32 @@ def read_tab(fname, group_start='trial_id', group_end='trial_ok'):
     def reconstruct_tracker(fname):
         # read in raw data
         raw = read_tab_raw(fname)
+        # if dealer is used, find dealer_id and info
+        dealer_idx = np.where([r[1] == 'dealer_identify' for r in raw])[0]
+        if len(dealer_idx) != 0:
+            dealer_id = [ast.literal_eval(raw[ii][2])['dealer_id'] for ii in dealer_idx]
+            dealer_init_str = ['dealer_' + str(t) + '_init' for t in dealer_id]
+            dealer_dict_idx = np.where([r[1] == init_str for r in raw])[0]
+            dealer_dict = [ast.literal_eval(raw[ii][2]) for ii in dealer_dict_idx]
 
         # find tracker_identify and make list of IDs
-        # find tracker_ID_init lines and get dict
-        # reconstruct tracker objects from tracker_ID_init dict
-        ########### return tracker objects ####################
-        # 
+        tracker_idx = np.where([r[1] == 'tracker_identify' for r in raw])[0]
+        tr = []
+        for ii in tracker_idx:
+            tracker_id = ast.literal_eval(raw[ii][2])['tracker_id']
+            tracker_type = ast.literal_eval(raw[ii][2])['tracker_type']
+            # find tracker_ID_init lines and get dict
+            init_str = 'tracker_' + str(tracker_id) + '_init'
+            tracker_dict_idx = np.where(raw[1] == init_str)
+            tracker_dicts = ast.literal_eval(raw[tracker_dict_idx][2])
+            if t_type == 'TrackerUD':
+                tr.append(TrackerUD(**t_dict))
+            else:
+                tr.append(TrackerBinom(**t_dict))
+            stop_str = 'tracker_' + str(tracker_id) + '_stopped'
+            tracker_stop_idx = np.where(raw[1] == stop_str)
+            responses = ast.literal_eval(raw[tracker_stop_idx][2]['responses'])
+            # feed in responses from tracker_ID_stop
+            [tr.respond(r) for r in responses]
+            
+        return tr
